@@ -1,0 +1,19 @@
+@page "/background"
+@rendermode InteractiveServer
+
+@inject BackgroundService BackgroundService
+
+<h3>BackgroundService Test</h3>
+
+<button class="btn btn-primary" @onclick="TestBackgroundService">Run BackgroundService</button>
+
+<p>@result</p>
+
+@code {
+    private string? result;
+
+    private void TestBackgroundService()
+    {
+        result = BackgroundService.GetText();
+    }
+}

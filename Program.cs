@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddScoped<BackgroundService>();
 
 var app = builder.Build();
 
@@ -24,5 +25,11 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapGet("/run-background", async (BackgroundService backgroundService) =>
+{
+    var title = await Task.Run(() => backgroundService.GetText());
+    return Results.Ok(new { Title = title });
+});
 
 app.Run();
