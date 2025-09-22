@@ -1,11 +1,18 @@
 using blazor_demo.Components;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddScoped<BackgroundService>();
+builder.Services.AddSingleton<BackgroundService>();
+builder.Services.AddHangfire(configuration => configuration
+        .UseInMemoryStorage());
+builder.Services.AddHangfireServer(options =>
+{
+    options.WorkerCount = 1;
+});
 
 var app = builder.Build();
 
@@ -31,5 +38,12 @@ app.MapGet("/run-background", async (BackgroundService backgroundService) =>
     var title = await Task.Run(() => backgroundService.GetText());
     return Results.Ok(new { Title = title });
 });
+
+var jobManager = app.Services.GetRequiredService<IRecurringJobManager>();
+var serviceProvider = app.Services;
+
+jobManager.AddOrUpdate("background-job", () => serviceProvider.GetRequiredService<BackgroundService>().GetText(), "*/15 5-15 * * *");
+
+app.UseHangfireDashboard();
 
 app.Run();
